@@ -1,6 +1,7 @@
 from apikey import API_KEY
 import requests
 import json
+from urllib import quote_plus
 
 DEBUG=True
 
@@ -126,20 +127,18 @@ for item in results:
             }
 
 
-        #print "\nDescription:", description
 
 
-
-whoamiurl = URL+"whoami?api_key="+API_KEY
-res = requests.get(whoamiurl)
-import pdb; pdb.set_trace()
-
-
-URL += "bug?api_key="+API_KEY
+URL += "bug?api_key="+quote_plus(APIKEY)
 
 for id in bugreports:
     bugentry = bugreports[id]
-    description = ""
+    description = "Please see the hints in bug 1211384 about fixing these " \
+                  "kinds of problems.\nThe Firefox OS Security team is " \
+                  "there to help you with any kind of question that you " \
+                  "may have. You can reach out by " \
+                  "setting the needinfo or " \
+                  "sec-review flag to fxos@security.bugs\n\n"
     for ftype in bugentry['findings']:
         description += ftype+":\n"
         for bug in bugentry['findings'][ftype]:
@@ -157,14 +156,11 @@ for id in bugreports:
     params = {
                  "product" : "Firefox OS",
                  "component" : id,
-                 "summary" : title,
+                 "summary" : bugentry["title"],
                  "description": description,
-                 "blocks" :{
-                     "set": [blocker]
-                 },
-                 "keywords": {
-                     "set": ["sec-want", "wsec-xss"]
-                 },
+                 "blocks" : [blocker],
+                 "keywords": ["sec-want", "wsec-xss"],
+                 "version": "unspecified"
 #                 "api_key": API_KEY
              }
     headers = {
@@ -172,10 +168,12 @@ for id in bugreports:
         "Content-Type": "application/json",
     }
 
-    print URL
+    #print URL
     res = requests.post(URL, json=params, headers=headers)
-    print json.dumps(params, sort_keys=True, indent=4, separators=(',', ': '))
-
-    print res
+    #print json.dumps(params, sort_keys=True, indent=4, separators=(',', ': '))
+    print res.text
+    if not res.ok:
+        print res
+        import pdb; pdb.set_trace()
 
 
